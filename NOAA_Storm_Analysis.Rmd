@@ -2,9 +2,10 @@
 title: 'NOAA Storm Database: Health and Economic Impacts'
 author: "Kevin Joy"
 date: "10/15/2019"
-output: 
+output:
+  pdf_document: default
   html_document:
-    keep_md: true
+    keep_md: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -54,7 +55,7 @@ names(storm) <- storm_headers
     * Assume the years 2005 - 2010 are representative for the analysis
     * Since 2011 is not a complete year remove 2011
   
-```{r cache=TRUE}
+```{r}
 storm$BGN_DATE <- mdy_hms(storm$BGN_DATE)
 storm$END_DATE <- mdy_hms(storm$END_DATE)
 
@@ -148,5 +149,24 @@ ggplot(health_impact_long, aes(reorder(EVTYPE, VALUE), VALUE, fill=TYPE)) +
 
 #### + Types of events that have the greatest economic consequences:
     
+    - Event Types that are in top 90th percentiles for either Property or Crop damage between 2005 - 2010
+    ```{r}
+economic_impact <- storm_impact %>%
+      select(EVTYPE, prop, crop) %>%
+      filter(prop > quantile(prop, .9) | crop > quantile(crop, .9)) %>%
+      arrange(desc(prop)) %>%
+      rename("Propety Damage $M (2005 - 2010)" = prop ,
+             "Crop Damage $M (2005 - 2010)" = crop )
+    economic_impact
+    ```    
+```{r}
 
-
+economic_impact_long <- gather(economic_impact, "TYPE", "VALUE", -EVTYPE)
+ggplot(economic_impact_long, aes(reorder(EVTYPE, VALUE), VALUE, fill=TYPE)) +
+  geom_col(position="dodge") +
+  coord_flip() +
+  labs(title = "Economic Impact of Major Storms between 2005 - 2010",
+        y = "$M",
+        x = "Event Type"
+        )
+```
