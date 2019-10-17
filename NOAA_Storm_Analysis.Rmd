@@ -83,7 +83,7 @@ storm$CROPDMG_USD_M = storm %>%
 
 
 ### 2. Results
-- Summarize the years of data beween 2005 - 2010 to determine total injuries fatalities, property damage and crop damage
+- Summarize the years of data beween 2005 - 2010 for each Event Type to determine total injuries, fatalities, property damage and crop damage
 ```{r}
 storm_impact = storm %>% 
   group_by(EVTYPE) %>% 
@@ -102,7 +102,7 @@ storm_impact = storm %>%
       filter(inj > quantile(inj, .9)) %>%
       arrange(desc(inj)) %>%
       rbind(data.frame(EVTYPE = "OTHER", inj = other_inj_sum) ) %>%      
-      mutate(percentage = paste0(round(inj/ sum(inj), 2)*100, "%")) %>%
+      mutate("% of Injuries" = paste0(round(inj/ sum(inj), 2)*100, "%")) %>%
       rename("Injuries (2005 - 2010)" = inj)
     ```
 
@@ -111,38 +111,39 @@ storm_impact = storm %>%
     - Event Types that are in the 90th percentile for causing Fatalities between 2005 - 2010
 
     ```{r}
+        other_fat_sum <- sum(storm_impact$fat) - sum(filter(storm_impact, fat > quantile(fat,.9))$fat)
     storm_impact %>%
       select(EVTYPE, fat) %>%
       filter(fat > quantile(fat, .9)) %>%
       arrange(desc(fat)) %>%
+      rbind(data.frame(EVTYPE = "OTHER", fat = other_fat_sum) ) %>%      
+      mutate("% of Fatalities" = paste0(round(fat/ sum(fat), 2)*100, "%")) %>%
       rename("Fatalities (2005 - 2010)" = fat)
              
     ```
-    - Event Types that are in top 90th percentiles for both Injuries and Fatalities between 2005 - 2010
-    ```{r}
-    storm_impact %>%
-      select(EVTYPE, inj, fat) %>%
-      filter(fat > quantile(fat, .9), inj > quantile(inj, .9)) %>%
-      arrange(desc(fat)) %>%
-      rename("Fatalities (2005 - 2010)" = fat ,
-             "Injuries (2005 - 2010)" = inj )
-      
-    ```    
-    
+
     - Event Types that are in top 90th percentiles for either Injuries or Fatalities between 2005 - 2010
     ```{r}
-    storm_impact %>%
+health_impact <- storm_impact %>%
       select(EVTYPE, fat, inj) %>%
       filter(fat > quantile(fat, .9) | inj > quantile(inj, .9)) %>%
       arrange(desc(fat)) %>%
       rename("Fatalities (2005 - 2010)" = fat ,
-             "Injuries (2005 - 2010)" = inj )
-      
+                         "Injuries (2005 - 2010)" = inj )
+    health_impact
     ```    
 
 
 ```{r}
-ggplot(top_health_impact[order(top_health_impact$inj, decreasing = TRUE),]) + geom_col( aes(x= reorder(EVTYPE, inj), inj)) + geom_col( aes(EVTYPE, fat), color = "red", position = "dodge") + coord_flip()
+
+health_impact_long <- gather(health_impact, "TYPE", "VALUE", -EVTYPE)
+ggplot(health_impact_long, aes(reorder(EVTYPE, VALUE), VALUE, fill=TYPE)) +
+  geom_col(position="dodge") +
+  coord_flip() +
+  labs(title = "Health Impact of Major Storms between 2005 - 2010",
+        y = "# of Injuries / Fatialities",
+        x = "Event Type"
+        )
 ```
 
 #### + Types of events that have the greatest economic consequences:
