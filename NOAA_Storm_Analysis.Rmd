@@ -19,14 +19,28 @@ This project involves exploring the U.S. National Oceanic and Atmospheric Admini
 The data analysis addresses the following questions:
 
 1. Across the United States, which types of events (as indicated in the **EVTYPE** variable) are most harmful with respect to population health?
-    * 
-
+    * The analysis will demonstrate that the following Events have the largest impact on population health
+        1. EXCESSIVE HEAT
+        2. TORNADO
+        3. FLASH FLOOD
+        4. RIP CURRENT
+        5. LIGHTNING
+        6. HEAT
+        7. THUNDERSTORM WIND
+        8. WILDFIRE
+        
 2. Across the United States, which types of events have the greatest economic consequences?
+    * The analysis will demonstrate that the following Events have the greatest economic consequences
+        1. FLOOD
+        2. HURRICANE/TYPHOON
+        3. STORM SURGE
+        4. HAIL
+        5. FLASH FLOOD
+        6. TORNADO
+        7. DROUGHT
+        8. FROST/FREEZE
 
-
-## Data Analysis:
-
-### 1. Data Processing
+## Data Processing
 - Load necessary packages
 ```{r message=FALSE}
 library(tidyverse)
@@ -50,7 +64,7 @@ storm <- read.csv(dataName, header=FALSE, skip =500000)
 names(storm) <- storm_headers
 ```
 
-- Following script will clean the data
+- Following scripts will clean, filter and normalize the data
   1. Convert dates from factor to dates. 
     * Assume the years 2005 - 2010 are representative for the analysis
     * Since 2011 is not a complete year remove 2011
@@ -59,7 +73,7 @@ names(storm) <- storm_headers
 storm$BGN_DATE <- mdy_hms(storm$BGN_DATE)
 storm$END_DATE <- mdy_hms(storm$END_DATE)
 
-#filter to only show values greater than 2000
+#filter to only show values between 2005 and 2010
 storm <- filter(storm, BGN_DATE >= "2005-01-01", BGN_DATE < "2011-01-01")
 ```
 
@@ -83,7 +97,7 @@ storm$CROPDMG_USD_M = storm %>%
 ```
 
 
-### 2. Results
+## Results
 - Summarize the years of data beween 2005 - 2010 for each Event Type to determine total injuries, fatalities, property damage and crop damage
 ```{r}
 storm_impact = storm %>% 
@@ -92,37 +106,10 @@ storm_impact = storm %>%
             fat = sum(FATALITIES),
             prop=sum(PROPDMG_USD_M),
             crop = sum(CROPDMG_USD_M))
+storm_impact %>% arrange(desc(fat))
 ```
 
 #### + Types of events that are most harmful to population health:
-    - Event Types that are in the 90th percentile for causing Injuries between 2005 - 2010
-    ```{r}
-    other_inj_sum <- sum(storm_impact$inj) - sum(filter(storm_impact, inj > quantile(inj,.9))$inj)
-    storm_impact %>%
-      select(EVTYPE, inj) %>%
-      filter(inj > quantile(inj, .9)) %>%
-      arrange(desc(inj)) %>%
-      rbind(data.frame(EVTYPE = "OTHER", inj = other_inj_sum) ) %>%      
-      mutate("% of Injuries" = paste0(round(inj/ sum(inj), 2)*100, "%")) %>%
-      rename("Injuries (2005 - 2010)" = inj)
-    ```
-
-
-
-    - Event Types that are in the 90th percentile for causing Fatalities between 2005 - 2010
-
-    ```{r}
-        other_fat_sum <- sum(storm_impact$fat) - sum(filter(storm_impact, fat > quantile(fat,.9))$fat)
-    storm_impact %>%
-      select(EVTYPE, fat) %>%
-      filter(fat > quantile(fat, .9)) %>%
-      arrange(desc(fat)) %>%
-      rbind(data.frame(EVTYPE = "OTHER", fat = other_fat_sum) ) %>%      
-      mutate("% of Fatalities" = paste0(round(fat/ sum(fat), 2)*100, "%")) %>%
-      rename("Fatalities (2005 - 2010)" = fat)
-             
-    ```
-
     - Event Types that are in top 90th percentiles for either Injuries or Fatalities between 2005 - 2010
     ```{r}
 health_impact <- storm_impact %>%
@@ -130,10 +117,11 @@ health_impact <- storm_impact %>%
       filter(fat > quantile(fat, .9) | inj > quantile(inj, .9)) %>%
       arrange(desc(fat)) %>%
       rename("Fatalities (2005 - 2010)" = fat ,
-                         "Injuries (2005 - 2010)" = inj )
+             "Injuries (2005 - 2010)" = inj )
     health_impact
     ```    
 
+##### The following figure displays the most devasting weather events for health sorted by Injuries:
 
 ```{r}
 
@@ -147,6 +135,7 @@ ggplot(health_impact_long, aes(reorder(EVTYPE, VALUE), VALUE, fill=TYPE)) +
         )
 ```
 
+
 #### + Types of events that have the greatest economic consequences:
     
     - Event Types that are in top 90th percentiles for either Property or Crop damage between 2005 - 2010
@@ -159,8 +148,9 @@ economic_impact <- storm_impact %>%
              "Crop Damage $M (2005 - 2010)" = crop )
     economic_impact
     ```    
-```{r}
 
+##### The following figure displays the most economically impactful weather events sorted by property damage:    
+```{r}
 economic_impact_long <- gather(economic_impact, "TYPE", "VALUE", -EVTYPE)
 ggplot(economic_impact_long, aes(reorder(EVTYPE, VALUE), VALUE, fill=TYPE)) +
   geom_col(position="dodge") +
@@ -170,3 +160,4 @@ ggplot(economic_impact_long, aes(reorder(EVTYPE, VALUE), VALUE, fill=TYPE)) +
         x = "Event Type"
         )
 ```
+*** Better predictions of the aforementioned weather events will lead to saving lives and the livlihood of people within the United States. ***
