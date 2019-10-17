@@ -381,20 +381,26 @@ summary {
 </div>
 <div id="data-analysis" class="section level2">
 <h2>Data Analysis:</h2>
-<div id="download-data-clean-and-prepocess-data" class="section level3">
-<h3>1. Download Data, clean and prepocess data</h3>
+<div id="data-processing" class="section level3">
+<h3>1. Data Processing</h3>
 <ul>
 <li>Load necessary packages</li>
 </ul>
 <pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>## ── Attaching packages ─────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ── Attaching packages ───────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
 <pre><code>## ✔ ggplot2 3.2.1     ✔ purrr   0.3.2
 ## ✔ tibble  2.1.3     ✔ dplyr   0.8.3
 ## ✔ tidyr   0.8.3     ✔ stringr 1.4.0
 ## ✔ readr   1.3.1     ✔ forcats 0.4.0</code></pre>
-<pre><code>## ── Conflicts ────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+<pre><code>## ── Conflicts ──────────────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(lubridate)</code></pre>
+<pre><code>## 
+## Attaching package: 'lubridate'</code></pre>
+<pre><code>## The following object is masked from 'package:base':
+## 
+##     date</code></pre>
 <ul>
 <li>Download data csv file does not exist unzip activity.zip</li>
 </ul>
@@ -407,53 +413,48 @@ if(!file.exists(dataName)){
     download.file(data_url, dataName)
     #no need to unzip
   }
-storm = read.csv(dataName, nrows = 10000)
-str(storm)</code></pre>
-<pre><code>## 'data.frame':    10000 obs. of  37 variables:
-##  $ STATE__   : num  1 1 1 1 1 1 1 1 1 1 ...
-##  $ BGN_DATE  : Factor w/ 2659 levels &quot;1/10/1972 0:00:00&quot;,..: 797 797 427 1670 187 187 196 26 387 387 ...
-##  $ BGN_TIME  : int  130 145 1600 900 1500 2000 100 900 2000 2000 ...
-##  $ TIME_ZONE : Factor w/ 4 levels &quot;CST&quot;,&quot;EST&quot;,&quot;MST&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ COUNTY    : num  97 3 57 89 43 77 9 123 125 57 ...
-##  $ COUNTYNAME: Factor w/ 140 levels &quot;&quot;,&quot;APACHE&quot;,&quot;ARKANSAS&quot;,..: 93 6 52 86 42 76 11 128 129 52 ...
-##  $ STATE     : Factor w/ 3 levels &quot;AL&quot;,&quot;AR&quot;,&quot;AZ&quot;: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ EVTYPE    : Factor w/ 3 levels &quot;HAIL&quot;,&quot;TORNADO&quot;,..: 2 2 2 2 2 2 2 2 2 2 ...
-##  $ BGN_RANGE : num  0 0 0 0 0 0 0 0 0 0 ...
-##  $ BGN_AZI   : logi  NA NA NA NA NA NA ...
-##  $ BGN_LOCATI: logi  NA NA NA NA NA NA ...
-##  $ END_DATE  : logi  NA NA NA NA NA NA ...
-##  $ END_TIME  : logi  NA NA NA NA NA NA ...
-##  $ COUNTY_END: num  0 0 0 0 0 0 0 0 0 0 ...
-##  $ COUNTYENDN: logi  NA NA NA NA NA NA ...
-##  $ END_RANGE : num  0 0 0 0 0 0 0 0 0 0 ...
-##  $ END_AZI   : logi  NA NA NA NA NA NA ...
-##  $ END_LOCATI: logi  NA NA NA NA NA NA ...
-##  $ LENGTH    : num  14 2 0.1 0 0 1.5 1.5 0 3.3 2.3 ...
-##  $ WIDTH     : num  100 150 123 100 150 177 33 33 100 100 ...
-##  $ F         : int  3 2 2 2 2 2 2 1 3 3 ...
-##  $ MAG       : num  0 0 0 0 0 0 0 0 0 0 ...
-##  $ FATALITIES: num  0 0 0 0 0 0 0 0 1 0 ...
-##  $ INJURIES  : num  15 0 2 2 2 6 1 0 14 0 ...
-##  $ PROPDMG   : num  25 2.5 25 2.5 2.5 2.5 2.5 2.5 25 25 ...
-##  $ PROPDMGEXP: Factor w/ 3 levels &quot;&quot;,&quot;K&quot;,&quot;M&quot;: 2 2 2 2 2 2 2 2 2 2 ...
-##  $ CROPDMG   : num  0 0 0 0 0 0 0 0 0 0 ...
-##  $ CROPDMGEXP: logi  NA NA NA NA NA NA ...
-##  $ WFO       : Factor w/ 46 levels &quot;&quot;,&quot;$IN&quot;,&quot;$TU&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ STATEOFFIC: logi  NA NA NA NA NA NA ...
-##  $ ZONENAMES : logi  NA NA NA NA NA NA ...
-##  $ LATITUDE  : num  3040 3042 3340 3458 3412 ...
-##  $ LONGITUDE : num  8812 8755 8742 8626 8642 ...
-##  $ LATITUDE_E: num  3051 0 0 0 0 ...
-##  $ LONGITUDE_: num  8806 0 0 0 0 ...
-##  $ REMARKS   : logi  NA NA NA NA NA NA ...
-##  $ REFNUM    : num  1 2 3 4 5 6 7 8 9 10 ...</code></pre>
+storm &lt;- read.csv(dataName, nrows = 100000)</code></pre>
+<ul>
+<li>Dates are stored as factor. Let’s convert the factor dates to regular dates using the lubridate package</li>
+</ul>
+<pre class="r"><code>date_fields &lt;- c(&quot;BGN_DATE&quot;, &quot;END_DATE&quot;)
+storm[, date_fields] &lt;- mdy_hms(storm[,date_fields])</code></pre>
+<pre><code>## Warning in regexpr(reg, x, ignore.case = TRUE, perl = TRUE): back-tracking
+## limit reached in PCRE for element 2
+
+## Warning in regexpr(reg, x, ignore.case = TRUE, perl = TRUE): back-tracking
+## limit reached in PCRE for element 2
+
+## Warning in regexpr(reg, x, ignore.case = TRUE, perl = TRUE): back-tracking
+## limit reached in PCRE for element 2
+
+## Warning in regexpr(reg, x, ignore.case = TRUE, perl = TRUE): back-tracking
+## limit reached in PCRE for element 2
+
+## Warning in regexpr(reg, x, ignore.case = TRUE, perl = TRUE): back-tracking
+## limit reached in PCRE for element 2
+
+## Warning in regexpr(reg, x, ignore.case = TRUE, perl = TRUE): back-tracking
+## limit reached in PCRE for element 2
+
+## Warning in regexpr(reg, x, ignore.case = TRUE, perl = TRUE): back-tracking
+## limit reached in PCRE for element 2
+
+## Warning in regexpr(reg, x, ignore.case = TRUE, perl = TRUE): back-tracking
+## limit reached in PCRE for element 2</code></pre>
+<pre><code>## Warning: All formats failed to parse. No formats found.</code></pre>
+<pre class="r"><code>#filter to only show values greater than 2000
+storm &lt;- filter(storm, BGN_DATE &gt;= &quot;2000-01-01&quot;)</code></pre>
 </div>
-<div id="exploratory-data-analysis" class="section level3">
-<h3>1. Exploratory Data Analysis</h3>
+<div id="results" class="section level3">
+<h3>2. Results</h3>
+<div id="types-of-events-that-are-most-harmful-to-population-health" class="section level4">
+<h4>+ Types of events that are most harmful to population health:</h4>
+</div>
+<div id="types-of-events-that-have-the-greatest-economic-consequences" class="section level4">
+<h4>+ Types of events that have the greatest economic consequences:</h4>
 </div>
 </div>
-<div id="findings" class="section level2">
-<h2>Findings</h2>
 </div>
 
 

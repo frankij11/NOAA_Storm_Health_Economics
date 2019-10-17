@@ -24,14 +24,15 @@ The data analysis addresses the following questions:
 
 ## Data Analysis:
 
-### 1. Download Data, clean and prepocess data
+### 1. Data Processing
 - Load necessary packages
-```{r}
+```{r message=FALSE}
 library(tidyverse)
-
+library(lubridate)
 ```
 
-- Download data csv file does not exist unzip activity.zip
+- Download data and load csv.bz2 file.
+- Since the dataset is large and more recent data is more complete we will only load a subset of data to do this analysis.
 ```{r cache=TRUE}
 data_url <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
 dataName <- "data/storm.csv.bz2"
@@ -42,13 +43,60 @@ if(!file.exists(dataName)){
     download.file(data_url, dataName)
     #no need to unzip
   }
-storm = read.csv(dataName, nrows = 10000)
-str(storm)
+storm_headers <- names(read.csv(dataName, nrows = 2))
+storm <- read.csv(dataName, header=FALSE, skip =500000)
+names(storm) <- storm_headers
+```
+
+- Following script will clean the data
+  1. Convert dates from factor to dates. 
+    * Assume the years 2005 - 2010 are representative for the analysis
+    * Since 2011 is not a complete year remove 2011
+  
+```{r cache=TRUE}
+storm$BGN_DATE <- mdy_hms(storm$BGN_DATE)
+storm$END_DATE <- mdy_hms(storm$END_DATE)
+
+#filter to only show values greater than 2000
+storm <- filter(storm, BGN_DATE >= "2005-01-01", BGN_DATE < "2011-01-01")
+```
+
+  2. Normalize Property Damage and Crop Damage to millions by creating new variables
+```{r}
+exp_key = data.frame( key = c("K", "M", "B", "0", ""), value = c(1000, 1000000, 1000000000, 10, 0))
+
+storm$PROPDMG_USD_M = storm %>%
+  select(PROPDMGEXP, PROPDMG) %>%
+  left_join(exp_key , by = c("PROPDMGEXP" = "key")) %>%
+  mutate(PROPDMG_USD_M = PROPDMG * value / 1000000) %>%
+  pull()
+
+storm$CROPDMG_USD_M = storm %>%
+  select(CROPDMGEXP, CROPDMG) %>%
+  left_join(exp_key , by= c("CROPDMGEXP"="key")) %>%
+  mutate(CROPDMG_USD_M = CROPDMG * value / 1000000) %>%
+  pull()
+
+
 ```
 
 
-### 2. Exploratory Data Analysis
+### 2. Results
 
-## Findings
+```{r}
+storm_impact = storm %>% 
+  group_by(EVTYPE) %>% 
+  summarize(inj = sum(INJURIES),
+            fat = sum(FATALITIES),
+            prop=sum(PROPDMG_USD_M),
+            crop = sum(CROPDMG_USD_M))
+
+```
+
+#### + Types of events that are most harmful to population health:
+
+
+#### + Types of events that have the greatest economic consequences:
+    
 
 
